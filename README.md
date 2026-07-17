@@ -4,6 +4,18 @@ Campus Recruitment Lifecycle Management System for CUTM-AP, Vizianagaram.
 This bundle contains every deliverable, in four formats, from quickest-to-run to
 most-production-ready.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Login](screenshots/01-login.png) | ![Placement Dashboard](screenshots/02-dashboard.png) |
+| ![Student Profiles](screenshots/03-student-profiles.png) | ![Student Dashboard](screenshots/04-student-dashboard.png) |
+| ![CV Generator](screenshots/05-cv-generator.png) | ![Pursuit Manager — Placement Drives](screenshots/06-pursuit-manager-drives.png) |
+| ![Registration Report](screenshots/07-registration-report.png) | ![Final Placement Report](screenshots/08-final-report.png) |
+
+*Student/roll data shown in these screenshots is either aggregate (charts, counts) or a synthetic
+"Demo Student" record — no real student's personal information is pictured.*
+
 ## What's inside
 
 ```
