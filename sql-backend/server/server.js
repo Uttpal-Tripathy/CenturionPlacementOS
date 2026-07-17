@@ -23,7 +23,7 @@ const API_TOKEN = process.env.API_TOKEN || ""; // optional bearer token; empty =
 // Allowed tables and their writable columns (whitelist prevents SQL injection via identifiers).
 const TABLES = {
   users:["name","email","role","status"],
-  students:["name","roll","dept","batch","cgpa","backlogs","status","email","personal_email","phone","campus","school","gender","domain","cv_link","interest","gfg_score"],
+  students:["name","roll","dept","batch","cgpa","backlogs","status","email","personal_email","phone","campus","school","gender","domain","cv_link","interest","gfg_score","tenth_pct","twelfth_pct"],
   companies:["name","industry","hr","email","website"],
   jobs:["company","title","roles","ctc","location","min_cgpa","deadline","status","source","apply_url"],
   internships:["company","role","duration","stipend","location","status","deadline"],

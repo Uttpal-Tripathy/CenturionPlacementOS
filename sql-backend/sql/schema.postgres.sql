@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS students (
   cv_link        TEXT,
   interest       TEXT,          -- Job / Higher Education / Self Employment
   gfg_score      NUMERIC(6,2),  -- GeeksforGeeks coding score from the student roster
+  tenth_pct      NUMERIC(5,2),  -- 10th standard percentage (from the student roster)
+  twelfth_pct    NUMERIC(5,2),  -- 12th standard percentage (from the student roster)
   created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at     TIMESTAMPTZ NOT NULL DEFAULT now()
 );

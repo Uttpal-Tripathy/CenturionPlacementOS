@@ -35,13 +35,14 @@ const asNumber = (v) => {
 const wb = XLSX.readFile(filePath);
 const db = new DatabaseSync(dbFile);
 const upsert = db.prepare(`
-  INSERT INTO "students" ("id","name","roll","dept","batch","cgpa","backlogs","status","email","personal_email","phone","campus","school","gender","domain","cv_link","interest","gfg_score")
-  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+  INSERT INTO "students" ("id","name","roll","dept","batch","cgpa","backlogs","status","email","personal_email","phone","campus","school","gender","domain","cv_link","interest","gfg_score","tenth_pct","twelfth_pct")
+  VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
   ON CONFLICT("roll") DO UPDATE SET
     name=excluded.name, dept=excluded.dept, batch=excluded.batch, cgpa=excluded.cgpa, backlogs=excluded.backlogs,
     email=excluded.email, personal_email=excluded.personal_email, phone=excluded.phone, campus=excluded.campus,
     school=excluded.school, gender=excluded.gender, domain=excluded.domain, cv_link=excluded.cv_link,
-    interest=excluded.interest, gfg_score=excluded.gfg_score, updated_at=(datetime('now'))
+    interest=excluded.interest, gfg_score=excluded.gfg_score, tenth_pct=excluded.tenth_pct,
+    twelfth_pct=excluded.twelfth_pct, updated_at=(datetime('now'))
 `);
 
 let imported = 0, skipped = 0;
@@ -69,11 +70,14 @@ for (const sheetName of wb.SheetNames) {
     const cvLink = asText(findKey(row, "cv link"));
     const interest = asText(findKey(row, "interested for job"));
     const gfgScore = asNumber(findKey(row, "geeks for geeks score", "geeksforgeeks"));
+    const tenthPct = asNumber(findKey(row, "10th"));
+    const twelfthPct = asNumber(findKey(row, "12th"));
 
     upsert.run(
       crypto.randomUUID(), name, roll, dept, batch,
       cgpa, backlogs ?? 0, "Unplaced",
-      email, personalEmail, phone, campus, school, gender, domain, cvLink, interest, gfgScore
+      email, personalEmail, phone, campus, school, gender, domain, cvLink, interest, gfgScore,
+      tenthPct, twelfthPct
     );
     imported++; sheetCount++;
   }

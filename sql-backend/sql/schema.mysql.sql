@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS `users` (
 CREATE TABLE IF NOT EXISTS `students` (
   id CHAR(36) PRIMARY KEY,
   name TEXT NOT NULL, roll VARCHAR(64) UNIQUE, dept VARCHAR(32), batch VARCHAR(16), cgpa DECIMAL(4,2), backlogs INT DEFAULT 0, status VARCHAR(32) DEFAULT 'Unplaced',
-  email VARCHAR(255), personal_email VARCHAR(255), phone VARCHAR(32), campus VARCHAR(64), school VARCHAR(128), gender VARCHAR(16), domain VARCHAR(128), cv_link TEXT, interest VARCHAR(64), gfg_score DECIMAL(6,2),
+  email VARCHAR(255), personal_email VARCHAR(255), phone VARCHAR(32), campus VARCHAR(64), school VARCHAR(128), gender VARCHAR(16), domain VARCHAR(128), cv_link TEXT, interest VARCHAR(64), gfg_score DECIMAL(6,2), tenth_pct DECIMAL(5,2), twelfth_pct DECIMAL(5,2),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
