@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function role() { return request.auth.token.role; }
+    function staff() { return role() in ['Placement Officer','Administrator','Career Coordinator','Pursuit Manager']; }
+
+    match /{coll}/{docId}
+      where coll in ['students','companies','jobs','drives','assessments','interviews','tracking',
+                     'offers','internships','notifications','announcement','reports','custom',
+                     'documents','eligibility','preferences','applications'] {
+      allow read: if signedIn();
+      allow write: if signedIn() && staff();
+    }
+    match /employer/{docId} { allow read: if signedIn(); allow write: if signedIn() && (staff() || role() == 'Employer'); }
+    match /email/{docId}    { allow read, write: if signedIn() && role() in ['Placement Officer','Administrator','Career Coordinator']; }
+    match /users/{docId}    { allow read, write: if signedIn() && role() == 'Administrator'; }
+    match /config/{docId}   { allow read, write: if signedIn() && role() == 'Administrator'; }
+  }
+}

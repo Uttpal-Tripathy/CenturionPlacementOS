@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+
+# Secrets / local config
+.env
+.env.local
+!.env.example
+!.env.firebase.example
+
+# Real student data (contains live PII) — see sql-backend/README.md to regenerate locally
+sql-backend/data/*.db
+sql-backend/data/*.db-shm
+sql-backend/data/*.db-wal
+
+# Real 2024-2027 leadership contacts + 7,331 real placement-offer records (names, companies, CTC) —
+# same PII concern as the live .db above. Keep schema.*.sql (structure only); exclude the data dump.
+sql-backend/sql/placementos_data.postgres.sql
+sql-backend/sql/placementos_data.mysql.sql
+
+# OS / editor junk
+.DS_Store
+Thumbs.db

@@ -1,0 +1,234 @@
+-- PlacementOS schema (MySQL 8+). Run: mysql placementos < schema.mysql.sql
+
+CREATE TABLE IF NOT EXISTS `users` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, role VARCHAR(64) NOT NULL DEFAULT 'Student', status VARCHAR(32) DEFAULT 'Active',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `students` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT NOT NULL, roll VARCHAR(64) UNIQUE, dept VARCHAR(32), batch VARCHAR(16), cgpa DECIMAL(4,2), backlogs INT DEFAULT 0, status VARCHAR(32) DEFAULT 'Unplaced',
+  email VARCHAR(255), personal_email VARCHAR(255), phone VARCHAR(32), campus VARCHAR(64), school VARCHAR(128), gender VARCHAR(16), domain VARCHAR(128), cv_link TEXT, interest VARCHAR(64), gfg_score DECIMAL(6,2),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `companies` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT NOT NULL, industry VARCHAR(64), hr TEXT, email VARCHAR(255), website VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `jobs` (
+  id CHAR(36) PRIMARY KEY,
+  company TEXT NOT NULL, title TEXT NOT NULL, roles TEXT, ctc VARCHAR(64), location VARCHAR(64), min_cgpa DECIMAL(4,2), deadline VARCHAR(64), status VARCHAR(32) DEFAULT 'Open', source VARCHAR(32) DEFAULT 'On-Campus', apply_url TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `internships` (
+  id CHAR(36) PRIMARY KEY,
+  company TEXT NOT NULL, role TEXT, duration VARCHAR(64), stipend VARCHAR(64), location VARCHAR(64), status VARCHAR(32) DEFAULT 'Open', deadline VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `drives` (
+  id CHAR(36) PRIMARY KEY,
+  company TEXT, role TEXT, date VARCHAR(64), mode VARCHAR(32), venue TEXT, status VARCHAR(32) DEFAULT 'Pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `eligibility` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT, roll VARCHAR(64), dept VARCHAR(32), cgpa DECIMAL(4,2), backlogs INT, status VARCHAR(32),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `applications` (
+  id CHAR(36) PRIMARY KEY,
+  student TEXT NOT NULL, email VARCHAR(255), company TEXT, title TEXT, type VARCHAR(32) DEFAULT 'Job', status VARCHAR(32) DEFAULT 'Applied', applied VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `assessments` (
+  id CHAR(36) PRIMARY KEY,
+  company TEXT, role TEXT, type VARCHAR(64), date VARCHAR(64), time VARCHAR(32), duration VARCHAR(32), status VARCHAR(32) DEFAULT 'Upcoming',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `interviews` (
+  id CHAR(36) PRIMARY KEY,
+  student TEXT, company TEXT, round VARCHAR(64), date VARCHAR(64), time VARCHAR(32), mode VARCHAR(32), status VARCHAR(32) DEFAULT 'Scheduled',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `tracking` (
+  id CHAR(36) PRIMARY KEY,
+  company TEXT, role TEXT, applied INT, shortlisted INT, interview INT, selected INT, status VARCHAR(32),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `offers` (
+  id CHAR(36) PRIMARY KEY,
+  student TEXT, company TEXT, role TEXT, ctc VARCHAR(64), `offerDate` VARCHAR(64), status VARCHAR(32) DEFAULT 'Pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `preferences` (
+  id CHAR(36) PRIMARY KEY,
+  student TEXT, locations TEXT, industries TEXT, roles TEXT, `expectedCtc` VARCHAR(64), relocation VARCHAR(8),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `notifications` (
+  id CHAR(36) PRIMARY KEY,
+  title TEXT, category VARCHAR(64), audience VARCHAR(64), date VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `email` (
+  id CHAR(36) PRIMARY KEY,
+  template TEXT, type VARCHAR(16), subject TEXT, body TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `announcement` (
+  id CHAR(36) PRIMARY KEY,
+  title TEXT, audience VARCHAR(64), date VARCHAR(64), body TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `reports` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT, period VARCHAR(32), type VARCHAR(64), `generatedOn` VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `custom` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT, dataset VARCHAR(64), `createdBy` TEXT, `createdOn` VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `documents` (
+  id CHAR(36) PRIMARY KEY,
+  name TEXT, type VARCHAR(64), owner TEXT, date VARCHAR(64), size VARCHAR(32), email VARCHAR(255), `dataUrl` LONGTEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `employer` (
+  id CHAR(36) PRIMARY KEY,
+  company TEXT, title TEXT, positions INT, status VARCHAR(32) DEFAULT 'Open', `postedOn` VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `profiles` (
+  id CHAR(36) PRIMARY KEY,
+  email VARCHAR(255) UNIQUE, name TEXT, headline TEXT, skills TEXT, location VARCHAR(64), education TEXT, phone VARCHAR(32), `resumeName` TEXT, `resumeUrl` LONGTEXT, `photoUrl` LONGTEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `savedjobs` (
+  id CHAR(36) PRIMARY KEY,
+  email VARCHAR(255), `itemId` VARCHAR(64), company TEXT, title TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `offerletters` (
+  id CHAR(36) PRIMARY KEY,
+  student TEXT, email VARCHAR(255), company TEXT, role TEXT, `fileName` TEXT, `dataUrl` LONGTEXT, `updatedAt` VARCHAR(64),
+  `driveRefId` VARCHAR(64), `verificationStatus` VARCHAR(32) DEFAULT 'Pending', `verificationNote` TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `assessmentresults` (
+  id CHAR(36) PRIMARY KEY,
+  student TEXT, email VARCHAR(255), aptitude INT, coding INT, gd INT, total INT, band VARCHAR(32), date VARCHAR(64),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `cv_documents` (
+  id CHAR(36) PRIMARY KEY,
+  email VARCHAR(255), roll VARCHAR(64), student TEXT, `jobType` VARCHAR(128),
+  summary TEXT, skills TEXT, projects LONGTEXT, certifications TEXT, experience LONGTEXT,
+  `atsScore` INT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- ============================== PURSUIT MANAGER: PLACEMENT DRIVE LIFECYCLE ==============================
+CREATE TABLE IF NOT EXISTS `placement_drives` (
+  id CHAR(36) PRIMARY KEY,
+  `refId` VARCHAR(64) UNIQUE,
+  `recruiterName` TEXT, `recruiterProfile` TEXT, website TEXT,
+  `jobTitle` TEXT, `jobProfile` TEXT, `jobSkill` TEXT, ctc VARCHAR(128),
+  `selectionProcess` TEXT, `jobLocation` VARCHAR(255),
+  `eligibleBranches` TEXT, `eligibleBatch` VARCHAR(255), `minCgpa` DECIMAL(4,2), `maxBacklogs` INT,
+  `expectedDriveDate` VARCHAR(64), `registrationLink` TEXT, `registrationDeadline` VARCHAR(64),
+  `trainingNeed` TEXT, `releasedBy` VARCHAR(255),
+  status VARCHAR(32) DEFAULT 'Draft',
+  `reportingTime` VARCHAR(128), venue VARCHAR(255), `requiredDocuments` TEXT, `dressCode` VARCHAR(255),
+  `interviewSchedule` TEXT, `companyInstructions` TEXT,
+  `notifiedAt` VARCHAR(64), `campusCommunicatedAt` VARCHAR(64), `resultsDeclaredAt` VARCHAR(64), `createdBy` VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `drive_students` (
+  id CHAR(36) PRIMARY KEY,
+  `driveRefId` VARCHAR(64) NOT NULL,
+  roll VARCHAR(64) NOT NULL, name TEXT, email VARCHAR(255), dept VARCHAR(255), batch VARCHAR(16),
+  `cgpaAtEntry` DECIMAL(4,2), `backlogsAtEntry` INT,
+  `registrationStatus` VARCHAR(32) DEFAULT 'Not Registered',
+  `registeredAt` VARCHAR(64),
+  `reminderSent` VARCHAR(8) DEFAULT 'No', `reminderSentAt` VARCHAR(64),
+  attendance VARCHAR(16) DEFAULT '',
+  `roundAptitude` VARCHAR(32) DEFAULT '', `roundTechnical` VARCHAR(32) DEFAULT '', `roundCoding` VARCHAR(32) DEFAULT '',
+  `roundGD` VARCHAR(32) DEFAULT '', `roundHR` VARCHAR(32) DEFAULT '',
+  `finalStatus` VARCHAR(32) DEFAULT '',
+  `readStatus` VARCHAR(32) DEFAULT 'Unknown',
+  `ackStatus` VARCHAR(32) DEFAULT 'Not Acknowledged',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS `drive_notifications` (
+  id CHAR(36) PRIMARY KEY,
+  `driveRefId` VARCHAR(64) NOT NULL,
+  type VARCHAR(32), channel VARCHAR(64),
+  `recipientCount` INT, `sentAt` VARCHAR(64), `sentBy` VARCHAR(255),
+  `deliveryStatus` VARCHAR(32) DEFAULT 'Recorded',
+  note TEXT,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_apps_student ON applications(student(64));
+CREATE INDEX idx_saved_email ON savedjobs(email);
+CREATE INDEX idx_drivestudents_driveref ON drive_students(`driveRefId`);
+CREATE INDEX idx_drivestudents_roll ON drive_students(roll);
+CREATE INDEX idx_drivenotif_driveref ON drive_notifications(`driveRefId`);
+CREATE INDEX idx_offerletters_driveref ON offerletters(`driveRefId`);
