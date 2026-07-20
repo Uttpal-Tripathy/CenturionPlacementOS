@@ -416,10 +416,16 @@ const {
 // window.API_BASE (set in the HTML head) points the app at the SQL REST API when present.
 
 /* ============================== CONFIG ============================== */
-const ACTIVE = "#2563EB",
+const ACTIVE = "#8B1538",
+  // Centurion University brand maroon (staff Shell + Login) — was blue "#2563EB"
   NAVY = "#0E2146",
   NAVY_HOVER = "#182f5c",
-  BLUE = "#3B82F6";
+  BLUE = "#3B82F6",
+  MAROON_LIGHT = "#FBEAEF",
+  // tint background for the active sidebar item
+  MAROON_DARK = "#5C0E28",
+  // darker shade for gradients/status bar
+  SIDEBAR_HOVER = "#F5F5F6";
 const DONUT = ["#2563EB", "#22C55E", "#F59E0B", "#EF4444", "#8B5CF6", "#94A3B8"];
 
 // Google Sheets to import (from the shared links). Pre-filled so staff only add an API key.
@@ -2274,7 +2280,9 @@ function EligibilityManagement({
     className: "w-3.5 h-3.5"
   }), " Live \xB7 ", students.rows.length, " records")), /*#__PURE__*/React.createElement("div", {
     className: "grid grid-cols-2 md:grid-cols-3 gap-4 mb-5"
-  }, kpi("Eligible", counts.Eligible, "text-emerald-600"), kpi("Not Eligible", counts["Not Eligible"], "text-rose-600"), kpi("Incomplete Data", counts["Incomplete Data"], "text-gray-500")), /*#__PURE__*/React.createElement(Card, {
+  }, kpi("Eligible", counts.Eligible, "text-emerald-600"), kpi("Not Eligible", counts["Not Eligible"], "text-rose-600"), kpi("Incomplete Data", counts["Incomplete Data"], "text-gray-500")), /*#__PURE__*/React.createElement(StudentInfographic, {
+    students: students.rows
+  }), /*#__PURE__*/React.createElement(Card, {
     className: "p-5"
   }, /*#__PURE__*/React.createElement("div", {
     className: "flex flex-wrap items-center gap-3 mb-4"
@@ -2343,10 +2351,120 @@ function EligibilityManagement({
     className: "text-xs text-gray-400 mt-4"
   }, "Showing ", filtered.length, " of ", students.rows.length, " \xB7 10th/12th values that are missing, look like raw marks (some sheets record marks instead of percentage), or are ≤10 (indistinguishable from a CGPA on some sheets that label the column “CGPA or Percentage”) are treated as missing, not as a fail."));
 }
+// The roster's free-text "interest" column has many spellings/variants for the same intent
+// (Job / JOB / job / "intrested for job" / "yes" / …) — bucket heuristically for charting only;
+// the underlying value is never modified. "yes" is kept as its own bucket rather than assumed to
+// mean "Job", since the source question covers three options and doesn't say which one "yes" answers.
+function interestBucket(raw) {
+  const v = String(raw || "").trim().toLowerCase();
+  if (!v) return "Not specified";
+  if (v.includes("not eligible")) return "Not Eligible";
+  if (v.includes("job") && v.includes("higher")) return "Job + Higher Education";
+  if (v.includes("job")) return "Placement (Job)";
+  if (v.includes("higher")) return "Higher Education";
+  if (v.includes("self employ")) return "Self Employment";
+  if (v === "yes") return "Interested (type unspecified)";
+  return "Other";
+}
+// Generic "top N + Other" bucketing for any free-text field with many distinct raw values (e.g.
+// dept/domain) — keeps charts readable regardless of how many raw categories exist in the source.
+function topNBuckets(rows, field, n, emptyLabel) {
+  const counts = {};
+  rows.forEach(r => {
+    const raw = r[field];
+    const key = raw && String(raw).trim() || emptyLabel;
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+  const top = sorted.slice(0, n);
+  const restSum = sorted.slice(n).reduce((s, [, c]) => s + c, 0);
+  if (restSum > 0) top.push(["Other", restSum]);
+  return top;
+}
+// Aggregate infographic: how many students are headed for placement vs higher education vs self
+// employment, and the program/domain spread — shown on the Student Profiles and Eligibility
+// Management pages. Reflects the full roster (not whatever filters are active on the page).
+function StudentInfographic({
+  students
+}) {
+  const interestCounts = useMemo(() => {
+    const c = {};
+    students.forEach(s => {
+      const b = interestBucket(s.interest);
+      c[b] = (c[b] || 0) + 1;
+    });
+    return c;
+  }, [students]);
+  const deptTop = useMemo(() => topNBuckets(students, "dept", 7, "Not specified"), [students]);
+  const domainTop = useMemo(() => topNBuckets(students, "domain", 7, "Not specified"), [students]);
+  const chartCard = (title, node) => /*#__PURE__*/React.createElement("div", {
+    key: title
+  }, /*#__PURE__*/React.createElement("h4", {
+    className: "text-xs font-semibold text-gray-500 mb-2"
+  }, title), node);
+  // Some dept values are long free-text program names (e.g. "Bachelor of Technology in
+  // Electronics and Communication Engineering (Bio-Medical Engineering)") that would otherwise
+  // overflow the bar chart's label column and get clipped.
+  const truncateLabel = (s, n = 24) => s.length > n ? s.slice(0, n - 1) + "…" : s;
+  const placementBound = (interestCounts["Placement (Job)"] || 0) + (interestCounts["Job + Higher Education"] || 0);
+  return /*#__PURE__*/React.createElement(Card, {
+    className: "p-5 mb-4"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center justify-between mb-1"
+  }, /*#__PURE__*/React.createElement("h3", {
+    className: "text-sm font-semibold text-gray-700"
+  }, "Student Infographic — Placement Interest, Program & Domain"), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs px-2.5 py-1 rounded-full bg-blue-50 text-blue-700"
+  }, placementBound, " of ", students.length, " heading for placement")), /*#__PURE__*/React.createElement("p", {
+    className: "text-[11px] text-gray-400 mb-4"
+  }, "Across the full roster — not affected by the filters below. Program/Domain show the top 7 by count; everything else is grouped as “Other”."), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-1 lg:grid-cols-3 gap-5"
+  }, chartCard("Placement Interest", /*#__PURE__*/React.createElement(ChartBox, {
+    type: "doughnut",
+    height: 220,
+    data: {
+      labels: Object.keys(interestCounts),
+      datasets: [{
+        data: Object.values(interestCounts),
+        backgroundColor: DONUT
+      }]
+    }
+  })), chartCard("By Program / Dept", /*#__PURE__*/React.createElement(ChartBox, {
+    type: "bar",
+    height: 220,
+    data: {
+      labels: deptTop.map(([k]) => truncateLabel(k)),
+      datasets: [{
+        label: "Students",
+        data: deptTop.map(([, v]) => v),
+        backgroundColor: "#2563EB"
+      }]
+    },
+    options: {
+      indexAxis: "y",
+      plugins: {
+        legend: {
+          display: false
+        }
+      }
+    }
+  })), chartCard("By Domain / Specialization", /*#__PURE__*/React.createElement(ChartBox, {
+    type: "doughnut",
+    height: 220,
+    data: {
+      labels: domainTop.map(([k]) => k),
+      datasets: [{
+        data: domainTop.map(([, v]) => v),
+        backgroundColor: DONUT
+      }]
+    }
+  }))));
+}
 function StudentsDirectory({
   canWrite
 }) {
   const assess = useCollection("assessmentresults");
+  const allStudents = useCollection("students");
   const [minPct, setMinPct] = useState("");
   const [minJR, setMinJR] = useState("");
   const [minCoding, setMinCoding] = useState("");
@@ -2379,7 +2497,9 @@ function StudentsDirectory({
   }, /*#__PURE__*/React.createElement("span", {
     className: "text-xs text-gray-400 pl-1"
   }, "Eligibility:"), numInput(minPct, setMinPct, "Min % ≥", "CGPA converted to percentage (CGPA \xD7 9.5)"), numInput(minJR, setMinJR, "Min JR Score ≥", "Job Readiness score — average of aptitude/coding/GD from the latest assessment result"), numInput(minCoding, setMinCoding, "Min Coding Score ≥", "GeeksforGeeks coding score from the student roster"));
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(CollectionPage, {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(StudentInfographic, {
+    students: allStudents.rows
+  }), /*#__PURE__*/React.createElement(CollectionPage, {
     id: "students",
     canWrite: canWrite,
     extraFilter: extraFilter,
@@ -4040,7 +4160,7 @@ function Login({
   return /*#__PURE__*/React.createElement("div", {
     className: "min-h-screen flex items-center justify-center px-4",
     style: {
-      background: "radial-gradient(circle at 20% 20%, #16305f, " + NAVY + ")"
+      background: "radial-gradient(circle at 20% 20%, " + MAROON_DARK + ", #2B0713)"
     }
   }, /*#__PURE__*/React.createElement("div", {
     className: "w-full max-w-md"
@@ -4347,33 +4467,31 @@ function Shell({
       className: "p-16 text-center text-gray-500"
     }, "Module \u201C", active, "\u201D \u2014 configuration screen.");
   };
-  return /*#__PURE__*/React.createElement("div", {
-    className: "flex h-screen bg-gray-50 text-gray-900 overflow-hidden"
-  }, /*#__PURE__*/React.createElement("aside", {
-    className: (open ? "w-64" : "w-0") + " transition-all duration-300 shrink-0 overflow-hidden",
+  const sidebarLogo = /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-3 px-5 py-5 border-b border-gray-100"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
     style: {
-      background: NAVY
+      background: ACTIVE
     }
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "w-64 h-full flex flex-col"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "flex items-center gap-3 px-5 py-5 border-b border-white/10"
-  }, /*#__PURE__*/React.createElement("div", {
-    className: "w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "graduation-cap",
     className: "w-5 h-5 text-white"
   })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("p", {
-    className: "text-white font-bold text-sm"
-  }, "ERP"), /*#__PURE__*/React.createElement("p", {
-    className: "text-white/60 text-xs"
-  }, "Placement Module"))), /*#__PURE__*/React.createElement("nav", {
+    className: "font-bold text-[13px] leading-tight",
+    style: {
+      color: ACTIVE
+    }
+  }, "CENTURION UNIVERSITY"), /*#__PURE__*/React.createElement("p", {
+    className: "text-gray-400 text-[11px]"
+  }, "Placement ERP")));
+  const sidebarNav = /*#__PURE__*/React.createElement("nav", {
     className: "flex-1 overflow-y-auto py-3 px-3"
   }, nav.map((g, gi) => /*#__PURE__*/React.createElement("div", {
     key: gi,
     className: "mb-1"
   }, g.section && /*#__PURE__*/React.createElement("p", {
-    className: "text-white/40 text-[10px] font-semibold tracking-wider px-3 mt-4 mb-1"
+    className: "text-gray-400 text-[10px] font-semibold tracking-wider px-3 mt-4 mb-1"
   }, g.section), g.items.map(item => {
     const is = active === item.id;
     return /*#__PURE__*/React.createElement("button", {
@@ -4381,11 +4499,12 @@ function Shell({
       onClick: () => setActive(item.id),
       className: "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5",
       style: {
-        background: is ? ACTIVE : "transparent",
-        color: is ? "#fff" : "rgba(255,255,255,0.7)"
+        background: is ? MAROON_LIGHT : "transparent",
+        color: is ? ACTIVE : "#4B5563",
+        fontWeight: is ? 600 : 400
       },
       onMouseEnter: e => {
-        if (!is) e.currentTarget.style.background = NAVY_HOVER;
+        if (!is) e.currentTarget.style.background = SIDEBAR_HOVER;
       },
       onMouseLeave: e => {
         if (!is) e.currentTarget.style.background = "transparent";
@@ -4396,37 +4515,58 @@ function Shell({
     }), " ", /*#__PURE__*/React.createElement("span", {
       className: "truncate"
     }, item.label));
-  })))))), /*#__PURE__*/React.createElement("div", {
-    className: "flex-1 flex flex-col overflow-hidden"
-  }, /*#__PURE__*/React.createElement("header", {
-    className: "flex items-center gap-4 px-6 py-3 bg-white border-b border-gray-200 shrink-0"
-  }, /*#__PURE__*/React.createElement("button", {
-    onClick: () => setOpen(o => !o),
-    className: "p-1.5 rounded-lg hover:bg-gray-100"
+  }))));
+  const sidebar = /*#__PURE__*/React.createElement("aside", {
+    className: (open ? "w-64" : "w-0") + " transition-all duration-300 shrink-0 overflow-hidden border-r border-gray-100",
+    style: {
+      background: "#ffffff"
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "w-64 h-full flex flex-col"
+  }, sidebarLogo, sidebarNav));
+  const statusBar = /*#__PURE__*/React.createElement("div", {
+    className: "flex items-center gap-4 px-6 py-1.5 text-[11px] shrink-0",
+    style: {
+      background: MAROON_DARK,
+      color: "#F3D9DF"
+    }
+  }, /*#__PURE__*/React.createElement(LiveClock, {
+    className: "inline-flex items-center gap-1.5 tabular-nums"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-1.5"
   }, /*#__PURE__*/React.createElement(Icon, {
-    name: "menu",
-    className: "w-5 h-5 text-gray-600"
-  })), /*#__PURE__*/React.createElement("span", {
-    className: "text-xs text-gray-400 hidden sm:block"
-  }, "Centurion PlacementOS \xB7 CUTM-AP Vizianagaram \xB7 ", DB.mode), /*#__PURE__*/React.createElement("div", {
+    name: "database",
+    className: "w-3 h-3"
+  }), DB.mode), /*#__PURE__*/React.createElement("div", {
     className: "flex-1"
-  }), /*#__PURE__*/React.createElement(LiveClock, {
-    className: "hidden md:inline-flex items-center gap-1.5 text-xs text-gray-500 font-medium tabular-nums mr-2"
-  }), window.API_BASE && ["Administrator", "Placement Officer"].includes(user.role) && /*#__PURE__*/React.createElement("a", {
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-1.5"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "map-pin",
+    className: "w-3 h-3"
+  }), "CUTM-AP Vizianagaram"));
+  const headerPills = /*#__PURE__*/React.createElement("div", {
+    className: "hidden md:flex items-center gap-2 mr-2"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700"
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "w-1.5 h-1.5 rounded-full bg-emerald-500"
+  }), "Live \xB7 AY 2026–27"), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs font-medium px-2.5 py-1 rounded-full",
+    style: {
+      background: MAROON_LIGHT,
+      color: ACTIVE
+    }
+  }, user.role));
+  const backupLink = window.API_BASE && ["Administrator", "Placement Officer"].includes(user.role) ? /*#__PURE__*/React.createElement("a", {
     href: window.API_BASE.replace(/\/$/, "") + "/api/export/xlsx",
     title: "Download the full database as an Excel backup",
     className: "flex items-center gap-1.5 px-3 py-1.5 mr-2 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "database-backup",
     className: "w-3.5 h-3.5"
-  }), " Backup"), /*#__PURE__*/React.createElement("div", {
-    className: "relative"
-  }, /*#__PURE__*/React.createElement(Icon, {
-    name: "bell",
-    className: "w-6 h-6 text-gray-500"
-  }), /*#__PURE__*/React.createElement("span", {
-    className: "absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
-  }, "12")), /*#__PURE__*/React.createElement("div", {
+  }), " Backup") : null;
+  const avatarMenu = /*#__PURE__*/React.createElement("div", {
     className: "relative"
   }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setMenu(m => !m),
@@ -4437,7 +4577,10 @@ function Shell({
     className: "w-9 h-9 rounded-full object-cover",
     referrerPolicy: "no-referrer"
   }) : /*#__PURE__*/React.createElement("div", {
-    className: "w-9 h-9 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-semibold"
+    className: "w-9 h-9 rounded-full text-white flex items-center justify-center text-sm font-semibold",
+    style: {
+      background: ACTIVE
+    }
   }, user.initials), /*#__PURE__*/React.createElement("div", {
     className: "text-left hidden sm:block"
   }, /*#__PURE__*/React.createElement("p", {
@@ -4456,16 +4599,46 @@ function Shell({
   }, user.name), /*#__PURE__*/React.createElement("p", {
     className: "text-xs text-gray-500 truncate"
   }, user.email), /*#__PURE__*/React.createElement("p", {
-    className: "text-xs text-blue-600 mt-1"
+    className: "text-xs mt-1",
+    style: {
+      color: ACTIVE
+    }
   }, user.role)), /*#__PURE__*/React.createElement("button", {
     onClick: onSignOut,
     className: "w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
   }, /*#__PURE__*/React.createElement(Icon, {
     name: "log-out",
     className: "w-4 h-4"
-  }), " Sign out")))), /*#__PURE__*/React.createElement("main", {
+  }), " Sign out")));
+  const header = /*#__PURE__*/React.createElement("header", {
+    className: "flex items-center gap-4 px-6 py-3 bg-white border-b border-gray-200 shrink-0"
+  }, /*#__PURE__*/React.createElement("button", {
+    onClick: () => setOpen(o => !o),
+    className: "p-1.5 rounded-lg hover:bg-gray-100"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "menu",
+    className: "w-5 h-5 text-gray-600"
+  })), /*#__PURE__*/React.createElement("span", {
+    className: "text-xs text-gray-400 hidden sm:block"
+  }, "Centurion PlacementOS \xB7 CUTM-AP Vizianagaram \xB7 ", DB.mode), /*#__PURE__*/React.createElement("div", {
+    className: "flex-1"
+  }), headerPills, backupLink, /*#__PURE__*/React.createElement("div", {
+    className: "relative"
+  }, /*#__PURE__*/React.createElement(Icon, {
+    name: "bell",
+    className: "w-6 h-6 text-gray-500"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
+  }, "12")), avatarMenu);
+  const main = /*#__PURE__*/React.createElement("main", {
     className: "flex-1 overflow-y-auto p-6"
-  }, render())));
+  }, render());
+  const content = /*#__PURE__*/React.createElement("div", {
+    className: "flex-1 flex flex-col overflow-hidden"
+  }, header, statusBar, main);
+  return /*#__PURE__*/React.createElement("div", {
+    className: "flex h-screen bg-gray-50 text-gray-900 overflow-hidden"
+  }, sidebar, content);
 }
 
 /* ============================== STUDENT PORTAL (Naukri / GfG style) ============================== */
