@@ -49,6 +49,7 @@ const leadership = [
   { name: "Dr. Prashant Kumar Mohanty", email: "vc@cutmap.ac.in", role: "Vice Chancellor" },
   { name: "K V Ravi Kumar", email: "registrar@cutmap.ac.in", role: "Registrar" },
   { name: "Dr P A Sunny Dayal", email: "placement.officer@cutmap.ac.in", role: "Placement Officer" },
+  { name: "Nilanjan Bhattacharya", email: "nilanjan.bhattacharya@cutmap.ac.in", role: "Pursuit Manager" },
   { name: "Administrator", email: "admin@cutmap.ac.in", role: "Administrator" },
 ];
 const insUser = db.prepare(`INSERT OR IGNORE INTO "users" ("id","name","email","role","status") VALUES (?,?,?,?,'Active')`);

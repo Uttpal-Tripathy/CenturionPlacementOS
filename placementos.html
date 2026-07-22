@@ -474,6 +474,31 @@ const ACCESS = {
   pmdrives: ["Pursuit Manager"]
 };
 const canAccess = (role, id) => (ACCESS[id] || []).includes(role);
+// Lightweight hash-based routing for top-level navigation (Shell's sidebar, StudentPortal's
+// tabs) -- no router library is loaded (this file is offline-first, no CDN dependencies), so
+// this is a small hand-rolled hook instead. Reading location.hash on init makes a URL like
+// #/eligibility land directly on that page; writing it on every navigation makes the browser
+// back/forward buttons and page refresh behave as expected. `validValues`, when given, guards
+// against a stale hash from a different role/session landing on a screen that doesn't exist here.
+function useHashRoute(defaultValue, validValues) {
+  const parseHash = () => {
+    const h = window.location.hash.replace(/^#\/?/, "");
+    if (!h) return defaultValue;
+    if (validValues && !validValues.includes(h)) return defaultValue;
+    return h;
+  };
+  const [value, setValue] = useState(parseHash);
+  useEffect(() => {
+    const onHashChange = () => setValue(parseHash());
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+  const set = v => {
+    setValue(v);
+    if (window.location.hash.replace(/^#\/?/, "") !== v) window.location.hash = "/" + v;
+  };
+  return [value, set];
+}
 const f = (key, label, o = {}) => ({
   key,
   label,
@@ -4425,7 +4450,7 @@ function Shell({
   user,
   onSignOut
 }) {
-  const [active, setActive] = useState("dashboard");
+  const [active, setActive] = useHashRoute("dashboard", Object.keys(ACCESS));
   const [open, setOpen] = useState(true);
   const [menu, setMenu] = useState(false);
   const nav = NAV.map(g => ({
@@ -6062,7 +6087,7 @@ function StudentPortal({
   user,
   onSignOut
 }) {
-  const [tab, setTab] = useState("home");
+  const [tab, setTab] = useHashRoute("home", ["home", "jobs", "internships", "applications", "offers", "profile", "cv", "mock"]);
   const [menu, setMenu] = useState(false);
   const {
     profile
